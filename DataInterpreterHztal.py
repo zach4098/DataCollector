@@ -228,4 +228,4 @@ if fileInput == "all":
 else:
     file = collections[int(fileInput)]
     ReadFile(folder, file)
-    print("Done!")
+    print("Done.")
