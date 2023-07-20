@@ -2,6 +2,7 @@ import os
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font
+import params
 
 map = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'W', 
        'X', 'Y', 'Z']
@@ -67,7 +68,7 @@ def PeakHours(timeInit, timeFinal, folder, file):
         MorningPeakHours = [mPeakS[0], mPeakS[1], 0, mPeakF[0], mPeakF[1], 0]
         peakHoursM = True
     elif mPeak == '':
-        MorningPeakHours = [8, 30, 0, 10, 30, 0]
+        MorningPeakHours = params.defaultMorningPeakHours
         peakHoursM = True
     else:
         peakHoursM = False
@@ -82,7 +83,7 @@ def PeakHours(timeInit, timeFinal, folder, file):
         NightPeakHours = [nPeakS[0], nPeakS[1], 0, nPeakF[0], nPeakF[1], 0]
         peakHoursN = True
     elif nPeak == '':
-        NightPeakHours = [17, 30, 0, 21, 30, 0]
+        NightPeakHours = params.defaultNightPeakHours
         peakHoursN = True
     else:
         peakHoursN = False
