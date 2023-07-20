@@ -55,17 +55,37 @@ def CountLeftRight(List):
             nullCount += 1
     return leftCount, rightCount, nullCount
 
-MorningPeakHours = [10, 30, 0, 10, 48, 0]
-MorningPeakHours[4] = MorningPeakHours[4] + 1
-NightPeakHours = [17, 30, 0, 20, 30, 0]
-
 def PeakHours(timeInit, timeFinal, folder, file):
-    peakHoursM = False
-    peakHoursN = False
-    if int(timeInit[0]) <= MorningPeakHours[0]:
+    mPeak = input("Morning Peak? y/n: ")
+    if mPeak == 'y':
+        mPeakS = input("Enter Morning Peak Start Hours in format XX:XX - ")
+        mPeakF = input("Enter Morning Peak End Hours in format XX:XX - ")
+        mPeakS = mPeakS.split(':')
+        mPeakF = mPeakF.split(':')
+        mPeakS = [int(i) for i in mPeakS]
+        mPeakF = [int(i) for i in mPeakF]
+        MorningPeakHours = [mPeakS[0], mPeakS[1], 0, mPeakF[0], mPeakF[1], 0]
         peakHoursM = True
-    if int(timeFinal[0]) >= NightPeakHours[0]:
+    elif mPeak == '':
+        MorningPeakHours = [8, 30, 0, 10, 30, 0]
+        peakHoursM = True
+    else:
+        peakHoursM = False
+    nPeak = input("Night Peak? y/n: ")
+    if nPeak == 'y':
+        nPeakS = input("Enter Night Peak Start Hours in format XX:XX - ")
+        nPeakF = input("Enter Night Peak End Hours in format XX:XX - ")
+        nPeakS = nPeakS.split(":")
+        nPeakF = nPeakF.split(":")
+        nPeakS = [int(i) for i in nPeakS]
+        nPeakF = [int(i) for i in nPeakF]
+        NightPeakHours = [nPeakS[0], nPeakS[1], 0, nPeakF[0], nPeakF[1], 0]
         peakHoursN = True
+    elif nPeak == '':
+        NightPeakHours = [17, 30, 0, 21, 30, 0]
+        peakHoursN = True
+    else:
+        peakHoursN = False
     if peakHoursM:
         count = 0
         hoursFound = False
@@ -93,12 +113,16 @@ def PeakHours(timeInit, timeFinal, folder, file):
                     initTimeM = time
                 if MorningPeakHours[0] <= int(time[0]) <= MorningPeakHours[3]:
                     if vehicleMCount == 0:
-                        if MorningPeakHours[1] <= int(time[1]):
-                            peakHoursMVehicles.append(lines[count])
-                            count += 1
-                            vehicleMCount += 1
+                        if MorningPeakHours[0] == int(time[0]):
+                            if MorningPeakHours[1] <= int(time[1]):
+                                peakHoursMVehicles.append(lines[count])
+                                count += 1
+                                vehicleMCount += 1
+                            else:
+                                count += 1
                         else:
                             count += 1
+                            vehicleMCount += 1
                     else:
                         peakHoursMVehicles.append(lines[count])
                         count += 1
@@ -106,20 +130,23 @@ def PeakHours(timeInit, timeFinal, folder, file):
                 if int(time[0]) >= MorningPeakHours[3] and int(time[1]) >= MorningPeakHours[4] and int(time[2]) >= MorningPeakHours[5]:
                     if MorningPeakHours[3] == int(time[0]) and MorningPeakHours[4] <= int(time[1]):
                         print("aha!")
-                        peakHoursMVehicles.pop()
-                    if len(peakHoursMVehicles) != 0:
+                        if len(peakHoursMVehicles) != 0:
+                            peakHoursMVehicles.pop()
+                            vehicleMCount -= 1
+                    if len(peakHoursMVehicles) != 0 and len(peakHoursMVehicles) != 1:
                         finalTimeM = ReadTime(peakHoursMVehicles[len(peakHoursMVehicles) - 1])
                     else:
                         peakHoursM = False
                     hoursFound = True
                 if int(time[0]) > MorningPeakHours[3]:
-                    if len(peakHoursMVehicles) != 0:
+                    if len(peakHoursMVehicles) != 0 and len(peakHoursMVehicles) != 1:
                         finalTimeM = ReadTime(peakHoursMVehicles[len(peakHoursMVehicles) - 1])
                     else:
                         peakHoursM = False
                     hoursFound = True
             else:
-                finalTimeM = ReadTime(peakHoursMVehicles[len(peakHoursMVehicles) - 1])
+                if peakHoursM:
+                    finalTimeM = ReadTime(peakHoursMVehicles[len(peakHoursMVehicles) - 1])
                 hoursFound = True
         MleftVehicles, MrightVehicles, MnullVehicles = CountLeftRight(peakHoursMVehicles)
     if peakHoursN:
@@ -135,11 +162,16 @@ def PeakHours(timeInit, timeFinal, folder, file):
         count = 0
         start = False
         while not start:
-            time = ReadTime(lines[count])
-            if int(time[0]) < NightPeakHours[0]:
-                count += 1
-            else:
+            try:
+                time = ReadTime(lines[count])
+                if int(time[0]) < NightPeakHours[0]:
+                    count += 1
+                else:
+                    start = True
+            except:
                 start = True
+                hoursFound = True
+                peakHoursN = False
         vehicleNCount = 0
         peakHoursNVehicles = []
         while not hoursFound:
@@ -149,12 +181,16 @@ def PeakHours(timeInit, timeFinal, folder, file):
                     initTimeN = time
                 if NightPeakHours[0] <= int(time[0]) <= NightPeakHours[3]:
                     if vehicleNCount == 0:
-                        if NightPeakHours[1] <= int(time[1]):
-                            peakHoursNVehicles.append(lines[count])
-                            count += 1
-                            vehicleNCount += 1
+                        if NightPeakHours[0] == int(time[0]):
+                            if NightPeakHours[1] <= int(time[1]):
+                                peakHoursNVehicles.append(lines[count])
+                                count += 1
+                                vehicleNCount += 1
+                            else:
+                                count += 1
                         else:
                             count += 1
+                            vehicleNCount += 1
                     else:
                         peakHoursNVehicles.append(lines[count])
                         count += 1
@@ -162,20 +198,23 @@ def PeakHours(timeInit, timeFinal, folder, file):
                 if int(time[0]) >= NightPeakHours[3] and int(time[1]) >= NightPeakHours[4] and int(time[2]) >= NightPeakHours[5]:
                     if NightPeakHours[3] == int(time[0]) and NightPeakHours[4] <= int(time[1]):
                         print("aha!")
-                        peakHoursNVehicles.pop()
-                    if len(peakHoursNVehicles) != 0:
+                        if len(peakHoursNVehicles) != 0:
+                            peakHoursNVehicles.pop()
+                            vehicleNCount -= 1
+                    if len(peakHoursNVehicles) != 0 and len(peakHoursNVehicles) != 1:
                         finalTimeN = ReadTime(peakHoursNVehicles[len(peakHoursNVehicles) - 1])
                     else:
                         peakHoursN = False
                     hoursFound = True
                 if int(time[0]) > NightPeakHours[3]:
-                    if len(peakHoursNVehicles) != 0:
+                    if len(peakHoursNVehicles) != 0 and len(peakHoursNVehicles) != 1:
                         finalTimeN = ReadTime(peakHoursNVehicles[len(peakHoursNVehicles) - 1])
                     else:
                         peakHoursN = False
                     hoursFound = True
             else:
-                finalTimeN = ReadTime(peakHoursNVehicles[len(peakHoursNVehicles) - 1])
+                if peakHoursN:
+                    finalTimeN = ReadTime(peakHoursNVehicles[len(peakHoursNVehicles) - 1])
                 hoursFound = True
         NleftVehicles, NrightVehicles, NnullVehicles = CountLeftRight(peakHoursNVehicles)
     if not peakHoursM:
@@ -257,7 +296,7 @@ def ReadFile(folder, file):
     ws.cell(25, currentColumn).value = NtotalHours
     ws.cell(26, currentColumn).value = NvPerHour
     ws.cell(27, currentColumn).value = NleftVehicles
-    ws.cell(28, currentColumn).value = MrightVehicles
+    ws.cell(28, currentColumn).value = NrightVehicles
     ws.cell(29, currentColumn).value = NvPerHourL
     ws.cell(30, currentColumn).value = NvPerHourR
 
