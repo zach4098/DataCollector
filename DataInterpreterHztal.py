@@ -100,11 +100,16 @@ def PeakHours(timeInit, timeFinal, folder, file):
         count = 0
         start = False
         while not start:
-            time = ReadTime(lines[count])
-            if int(time[0]) < MorningPeakHours[0]:
-                count += 1
-            else:
+            try:
+                time = ReadTime(lines[count])
+                if int(time[0]) < NightPeakHours[0]:
+                    count += 1
+                else:
+                    start = True
+            except:
                 start = True
+                hoursFound = True
+                peakHoursM = False
         vehicleMCount = 0
         peakHoursMVehicles = []
         while not hoursFound:
@@ -130,7 +135,6 @@ def PeakHours(timeInit, timeFinal, folder, file):
                         vehicleMCount += 1
                 if int(time[0]) >= MorningPeakHours[3] and int(time[1]) >= MorningPeakHours[4] and int(time[2]) >= MorningPeakHours[5]:
                     if MorningPeakHours[3] == int(time[0]) and MorningPeakHours[4] <= int(time[1]):
-                        print("aha!")
                         if len(peakHoursMVehicles) != 0:
                             peakHoursMVehicles.pop()
                             vehicleMCount -= 1
@@ -198,7 +202,6 @@ def PeakHours(timeInit, timeFinal, folder, file):
                         vehicleNCount += 1
                 if int(time[0]) >= NightPeakHours[3] and int(time[1]) >= NightPeakHours[4] and int(time[2]) >= NightPeakHours[5]:
                     if NightPeakHours[3] == int(time[0]) and NightPeakHours[4] <= int(time[1]):
-                        print("aha!")
                         if len(peakHoursNVehicles) != 0:
                             peakHoursNVehicles.pop()
                             vehicleNCount -= 1
@@ -260,7 +263,7 @@ def ReadFile(folder, file):
     MdifferenceHour, MdifferenceMinute, MdifferenceSecond, MtotalHours, MvPerHour, MvPerHourL, MvPerHourR = TimeDifference(initTimeM, finalTimeM, vehicleMCount, MleftVehicles, MrightVehicles)
     NdifferenceHour, NdifferenceMinute, NdifferenceSecond, NtotalHours, NvPerHour, NvPerHourL, NvPerHourR = TimeDifference(initTimeN, finalTimeN, vehicleNCount, NleftVehicles, NrightVehicles)
 
-    wb = load_workbook("DataSpread/data.xlsx")
+    wb = load_workbook("DataSpread/{}".format(params.defaultSpreadsheetName))
     ws = wb.active
     currentColumn = 2
     openRow = False
@@ -302,26 +305,48 @@ def ReadFile(folder, file):
     ws.cell(30, currentColumn).value = NvPerHourR
 
 
-    wb.save("DataSpread/data.xlsx")
-folder = input("Select Folder: ")
-collections = os.listdir("{}/".format(folder))
+    wb.save("DataSpread/{}".format(params.defaultSpreadsheetName))
+loop = True
+while loop:
+    actionInput = input("Select Action: ")
+    if actionInput == "clear":
+        with open("ClearSpreadsheetHztal.py") as f:
+            exec(f.read())
+    elif actionInput == "new":
+        with open("NewSpreadsheetHztal.py") as f:
+            exec(f.read())
+    elif actionInput == "read":
+        folder = params.FileName
+        collections = os.listdir("{}/".format(folder))
 
-msg = "Select File to Read:\n"
-count = 0
-for item in collections:
-    msg = msg + "{}: {}".format(count, str(item)) + "\n"
-    count += 1
-print(msg)
+        msg = "Select File to Read:\n"
+        count = 0
+        for item in collections:
+            msg = msg + "{}: {}".format(count, str(item)) + "\n"
+            count += 1
+        print(msg)
+        readLoop = True
+        while readLoop:
+            fileInput = input("Select File: ")
 
-fileInput = input("Select File: ")
-
-if fileInput == "all":
-    count = 0
-    for i in collections:
-        ReadFile(folder, collections[count])
-        count += 1
-    print("Added a total of {} datasets!".format(count))
-else:
-    file = collections[int(fileInput)]
-    ReadFile(folder, file)
-    print("Done.")
+            if fileInput == "all":
+                count = 0
+                for i in collections:
+                    ReadFile(folder, collections[count])
+                    count += 1
+                print("Added a total of {} datasets!".format(count))
+                loop = False
+            elif fileInput == "end" or fileInput == "":
+                readLoop = False
+            else:
+                file = collections[int(fileInput)]
+                ReadFile(folder, file)
+                print("Done!")
+    elif actionInput == "" or actionInput == "end":
+        print("ending!")
+        loop = False
+    elif actionInput == "help":
+        print("Choose one of the following commands:\nread\nclear\nnew\nend")
+    else:
+        print("Error: no action found!")
+        loop = False
