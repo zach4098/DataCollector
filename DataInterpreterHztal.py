@@ -102,7 +102,7 @@ def PeakHours(timeInit, timeFinal, folder, file):
         while not start:
             try:
                 time = ReadTime(lines[count])
-                if int(time[0]) < NightPeakHours[0]:
+                if int(time[0]) < MorningPeakHours[0]:
                     count += 1
                 else:
                     start = True
